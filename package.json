@@ -1,0 +1,17 @@
+{
+  "name": "debian",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^1.4.23",
+    "process": "^0.9.0",
+    "sandcrawler": "git+https://github.com/medialab/sandcrawler.git",
+    "sandcrawler-logger": "git+https://github.com/Yomguithereal/sandcrawler-logger.git"
+  }
+}
