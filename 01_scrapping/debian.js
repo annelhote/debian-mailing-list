@@ -6,34 +6,56 @@ var sandcrawler 	= require('sandcrawler'),
 	fs 				= require('fs'),
 	process 		= require('process'),
 	MongoClient		= require('mongodb').MongoClient,
-	format 			= require('util').format;
+	format 			= require('util').format
+	debianScraper	= require('./scraper.js');
 
-var iLimit	= 0;
-var sUrl	= "https://lists.debian.org/debian-consultants/";
+var iLimit			= 0;
+var sRoottUrl		= "https://lists.debian.org/debian-user/";
+var iYear			= 1996;
+var iMonth			= 1;
+var sStartMessage	= "msg00000.html";
+var sStartUrl		= sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + sStartMessage;
+var iEndYear		= 2014;
+var iEndMonth		= 12;
+
 
 MongoClient.connect('mongodb://127.0.0.1:27017/debian', function(err, db) {
 	if(err) throw err;
 	var mailsCollection = db.collection('mails');
 
+	// Clear all mails
+	mailsCollection.remove({}, function(err, removed){});
+
 	// Create and config scraper
-	var scraper = new sandcrawler.scraper('debian')
+	var scraper = new sandcrawler.staticScraper('debian')
 		.use(logger())
 		.config({autoRetry : true, maxRetries : 5, timeout : 20 * 1000})
-		.url(sUrl)
+		.url(sStartUrl)
 		.limit(iLimit)
-		.beforeScraping(function(req, next) {
-			setTimeout(next, 100);
-		})
 		.iterate(function(i, req, res) {
-			var reg = new RegExp("\\?" + year + "\\+");
-			if((res.data.nav.next.match(reg)) && ((res.data.nav.previous != res.data.nav.next) || (i == 1))) {
-				return 'http://www.ccl.net' + res.data.nav.next;
+			if(res.data.nextbydate) {
+				sUrl = sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + res.data.nextbydate;
+				return sUrl;
 			} else {
-				return false;
+				if((iYear == iEndYear) && (iMonth == iEndMonth)) {
+					return false;
+				} else if(iMonth == 12) {
+					iMonth 		= 1;
+					iYear 		+= 1;
+					sUrl 		= sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + sStartMessage;
+					return sUrl;
+				} else {
+					iMonth 		+= 1;
+					sUrl 		= sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + sStartMessage;
+					return sUrl;
+				}
 			}
+			
 		})
-		.script('./scraper.js')
+		.parse(debianScraper)
 		.afterScraping(function(req, res, next) {
+			// Add scraped url
+			res.data.mail.url = req.url;
 			mailsCollection.insert(res.data.mail, function(err, docs) {
 				if(err) {
 					return next(new Error('mongo-error'));
@@ -43,8 +65,9 @@ MongoClient.connect('mongodb://127.0.0.1:27017/debian', function(err, db) {
 			});
 		})
 		.on('job:done', function(job) {
+			/*
 			if(job.state.failing) {
-				MongoClient.connect('mongodb://127.0.0.1:27017/ccl', function(err, db) {
+				MongoClient.connect('mongodb://127.0.0.1:27017/debian', function(err, db) {
 					if(err) throw err;
 					var urlsCollection = db.collection('urls');
 					urlsCollection.insert({'url' : job.req.url, 'state' : 'fail'}, function(err, docs) {
@@ -55,6 +78,7 @@ MongoClient.connect('mongodb://127.0.0.1:27017/debian', function(err, db) {
 					db.close();
 				});
 			}
+			*/
 		})
 		.result(function(err, req, res) {
 		});
