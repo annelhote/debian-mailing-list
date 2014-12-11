@@ -4,8 +4,9 @@
 
 
 # Imports
-import re, string, io, datetime
+import datetime, io, re, string, time
 from pprint import pprint
+from dateutil import parser
 from pymongo import MongoClient
 
 
@@ -87,6 +88,10 @@ if __name__ == "__main__":
 			dateyear = re.search(r'/(\d{4})/(\d{2})/', mail['url']).group(1)
 		else:
 			log(f, 'warning', 'Error in searching field "url" of mail : ' + str(mail['_id']))
+		if datemonth and dateyear:
+			timestamp = int(time.mktime(parser.parse(datemonth + '/01/' + dateyear).timetuple()))
+		else:
+			log(f, 'warning', 'Error in calculating "datemonth" and "dateyear" of mail : ' + str(mail['_id']))
 		mails.update(
 			{'_id': mail['_id']},
 			{
@@ -100,7 +105,8 @@ if __name__ == "__main__":
 					'inreplytoclean': inreplytoclean,
 					'referencesclean': referencesclean,
 					'datemonth': datemonth,
-					'dateyear': dateyear
+					'dateyear': dateyear,
+					'timestamp': timestamp
 				}
 			}
 		)
