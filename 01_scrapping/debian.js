@@ -9,15 +9,14 @@ var sandcrawler 	= require('sandcrawler'),
 	format 			= require('util').format
 	debianScraper	= require('./scraper.js');
 
+
+// Parameters
 var iLimit			= 0;
 var sRoottUrl		= "https://lists.debian.org/debian-user/";
+var iYear			= 1996;
+var iMonth			= 1;
 var sStartMessage	= "msg00000.html";
-// var sStartUrl		= sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + sStartMessage;
-// var iYear			= 1996;
-// var iMonth			= 1;
-var sStartUrl		= "https://lists.debian.org/debian-user/2001/05/msg04095.html";
-var iYear			= 2001;
-var iMonth			= 5;
+var sStartUrl		= sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + sStartMessage;
 var iEndYear		= 2014;
 var iEndMonth		= 12;
 
@@ -25,9 +24,6 @@ var iEndMonth		= 12;
 MongoClient.connect('mongodb://127.0.0.1:27017/debian', function(err, db) {
 	if(err) throw err;
 	var mailsCollection = db.collection('mails');
-
-	// Clear all mails
-	mailsCollection.remove({}, function(err, removed){});
 
 	// Create and config scraper
 	var scraper = new sandcrawler.staticScraper('debian')
