@@ -37,15 +37,14 @@ if __name__ == "__main__":
 	# Iterate over mails
 	for mail in mailsCollection.find():
 		# If mail['fromemail'] is not already an author, add it
-		if authorsCollection.find({'emails':mail['fromemail'],'deleted':{'$exists':False}}).count() == 0:
-			authorsCollection.insert({'emails':[mail['fromemail']],'mails':[mail['_id']],'count':1,'startdate':mail['timestamp'],'enddate':mail['timestamp']})
+		if authorsCollection.find({'email':mail['fromemail'],'deleted':{'$exists':False}}).count() == 0:
+			authorsCollection.insert({'email':mail['fromemail'],'mails':[mail['_id']],'count':1,'startdate':mail['timestamp'],'enddate':mail['timestamp']})
 		# Else increment the count and update the startdate and enddate fields if needed
 		else:
-			author = authorsCollection.find({'emails':mail['fromemail'],'deleted':{'$exists':False}})[0]
+			author = authorsCollection.find({'email':mail['fromemail'],'deleted':{'$exists':False}})[0]
 			startdate = mail['timestamp'] if mail['timestamp'] < author['startdate'] else author['startdate']
 			enddate = mail['timestamp'] if mail['timestamp'] > author['enddate'] else author['enddate']
 			authorsCollection.update({'_id':author['_id']},{'$set':{'startdate':startdate,'enddate':enddate},'$push':{'mails':mail['_id']}, '$inc':{'count':1}})
-
 
 	# Close the log file
 	log(f, 'info', 'End authoring')
