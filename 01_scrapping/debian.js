@@ -1,4 +1,4 @@
-// node debian.js
+// node debian.js 1996
 
 // Imports
 var sandcrawler 	= require('sandcrawler'),
@@ -10,15 +10,16 @@ var sandcrawler 	= require('sandcrawler'),
 	debianScraper	= require('./scraper.js');
 
 
+// Get command line args
+var iYear = process.argv[2];
+
+
 // Parameters
 var iLimit			= 0;
 var sRoottUrl		= "https://lists.debian.org/debian-user/";
-var iYear			= 1996;
 var iMonth			= 1;
 var sStartMessage	= "msg00000.html";
 var sStartUrl		= sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + sStartMessage;
-var iEndYear		= 2014;
-var iEndMonth		= 12;
 
 
 MongoClient.connect('mongodb://127.0.0.1:27017/debian', function(err, db) {
@@ -42,13 +43,8 @@ MongoClient.connect('mongodb://127.0.0.1:27017/debian', function(err, db) {
 				}
 				return sUrl;
 			} else {
-				if((iYear == iEndYear) && (iMonth == iEndMonth)) {
+				if(iMonth == 12) {
 					return false;
-				} else if(iMonth == 12) {
-					iMonth 		= 1;
-					iYear 		+= 1;
-					sUrl 		= sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + sStartMessage;
-					return sUrl;
 				} else {
 					iMonth 		+= 1;
 					sUrl 		= sRoottUrl + iYear + '/' + (iMonth < 10 ? '0' + iMonth : iMonth) + '/' + sStartMessage;
